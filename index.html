@@ -49,10 +49,10 @@ h1{font-family:var(--font-title);font-size:26px;color:#5A3E1B;text-align:center;
 .nav-btn{background:var(--card);border:1.5px solid #EDD9B0;border-radius:10px;padding:6px 16px;font-family:var(--font-main);font-weight:700;font-size:13px;color:#5A3E1B;cursor:pointer;transition:background 0.15s}
 .nav-btn:hover{background:#FFF3DC}
 .nav-btn.active{background:var(--gold2);border-color:var(--gold)}
-.stats-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
-.stat-card{background:var(--card);border:1.5px solid #EDD9B0;border-radius:12px;padding:10px 18px;text-align:center;min-width:90px}
-.stat-num{font-family:var(--font-title);font-size:22px;color:#5A3E1B;font-weight:800;line-height:1}
-.stat-lbl{font-size:10px;color:#A08060;font-weight:600;margin-top:2px}
+.stats-row{display:flex;gap:6px;justify-content:center;flex-wrap:nowrap;margin-bottom:10px;overflow-x:auto;align-items:center}
+.stat-card{background:var(--card);border:1.5px solid #EDD9B0;border-radius:10px;padding:6px 10px;text-align:center;min-width:70px;flex-shrink:0}
+.stat-num{font-family:var(--font-title);font-size:16px;color:#5A3E1B;font-weight:800;line-height:1}
+.stat-lbl{font-size:9px;color:#A08060;font-weight:600;margin-top:1px}
 .reward-msg{text-align:center;font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px;margin-top:8px}
 .reward-win{background:#E6F9EE;color:#2A7D55}
 .reward-mid{background:#FFF8E0;color:#9A6A00}
@@ -174,12 +174,9 @@ input[type=text]{font-family:var(--font-main)}
     <div class="stat-card"><div class="stat-num" id="week-score">0</div><div class="stat-lbl">Esta semana</div></div>
     <div class="stat-card"><div class="stat-num" id="today-score">0</div><div class="stat-lbl">Hoy</div></div>
     <div class="stat-card"><div class="stat-num" id="streak">0</div><div class="stat-lbl">Racha días</div></div>
-  </div>
-  <div class="stats-row">
     <div class="stat-card"><div class="stat-num">✅ <span id="good-points">0</span></div><div class="stat-lbl">Pts. buenos</div></div>
     <div class="stat-card"><div class="stat-num">❌ <span id="bad-points">0</span></div><div class="stat-lbl">Pts. malos</div></div>
   </div>
-  <button class="manage-btn" onclick="window.openTasksModal()">⚙️ Gestionar tareas</button>
   <div class="tasks-section">
     <div class="tasks-header">
       <div>Tarea</div>
@@ -193,7 +190,10 @@ input[type=text]{font-family:var(--font-main)}
   <div class="reset-section">
     <span class="reset-title">⚠️ Zona de administración</span>
     <span class="reset-desc">Elimina todo y comienza de nuevo</span>
-    <button onclick="window.resetSystem()" class="reset-btn">🔄 Reiniciar Sistema</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+      <button class="manage-btn" onclick="window.openTasksModal()" style="margin-bottom:0">⚙️ Gestionar tareas</button>
+      <button onclick="window.resetSystem()" class="reset-btn">🔄 Reiniciar Sistema</button>
+    </div>
   </div>
 </div>
 
