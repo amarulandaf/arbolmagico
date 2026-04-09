@@ -43,7 +43,8 @@ h1{font-family:var(--font-title);font-size:26px;color:#5A3E1B;text-align:center;
 .task-emoji{font-size:15px;margin-right:5px}
 .star-btn{width:30px;height:30px;border:none;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;margin:0 auto;border-radius:50%;transition:transform 0.15s}
 .star-btn:hover{transform:scale(1.25)}
-.star-btn.on{filter:drop-shadow(0 0 3px var(--gold))}
+.star-btn.good{filter:drop-shadow(0 0 3px var(--gold))}
+.star-btn.bad{filter:drop-shadow(0 0 3px #E05555)}
 .nav-row{display:flex;justify-content:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .nav-btn{background:var(--card);border:1.5px solid #EDD9B0;border-radius:10px;padding:6px 16px;font-family:var(--font-main);font-weight:700;font-size:13px;color:#5A3E1B;cursor:pointer;transition:background 0.15s}
 .nav-btn:hover{background:#FFF3DC}
@@ -90,6 +91,19 @@ input[type=text]{font-family:var(--font-main)}
 .hist-task-bar-wrap{flex:3;background:#EDE0CC;border-radius:10px;height:10px;overflow:hidden}
 .hist-task-bar{height:100%;border-radius:10px}
 .hist-task-pct{font-size:12px;font-weight:700;color:#5A3E1B;min-width:34px;text-align:right}
+.manage-section{background:var(--card);border:1.5px solid #EDD9B0;border-radius:16px;padding:14px;margin-bottom:14px}
+.manage-title{font-family:var(--font-title);font-size:14px;color:#5A3E1B;font-weight:800;margin-bottom:10px}
+.add-task-form{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.add-task-form input{flex:1;min-width:120px;padding:8px 12px;border:1.5px solid #EDD9B0;border-radius:8px;font-size:13px;color:#5A3E1B;background:#FFFAEF;font-family:var(--font-main)}
+.add-task-form button{padding:8px 16px;background:var(--green2);border:2px solid var(--green);border-radius:8px;font-weight:700;color:#5A3E1B;cursor:pointer;font-size:13px;transition:background 0.2s}
+.add-task-form button:hover{background:var(--green)}
+.tasks-list{display:flex;flex-direction:column;gap:8px}
+.task-item{display:flex;align-items:center;justify-content:space-between;background:#FFFAEF;border:1px solid #EDD9B0;border-radius:10px;padding:10px 12px}
+.task-item-content{flex:1;display:flex;align-items:center;gap:8px}
+.task-item-emoji{font-size:16px;min-width:20px}
+.task-item-name{font-size:13px;color:#5A3E1B;font-weight:600;flex:1}
+.task-item-remove{background:#FFE0DC;border:none;color:#9A2020;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:700;font-size:12px;transition:background 0.2s}
+.task-item-remove:hover{background:#E05555;color:#fff}
 </style>
 </head>
 <body>
@@ -127,6 +141,19 @@ input[type=text]{font-family:var(--font-main)}
     <div class="stat-card"><div class="stat-num" id="week-score">0</div><div class="stat-lbl">Esta semana</div></div>
     <div class="stat-card"><div class="stat-num" id="today-score">0</div><div class="stat-lbl">Hoy</div></div>
     <div class="stat-card"><div class="stat-num" id="streak">0</div><div class="stat-lbl">Racha días</div></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num">✅ <span id="good-points">0</span></div><div class="stat-lbl">Pts. buenos</div></div>
+    <div class="stat-card"><div class="stat-num">❌ <span id="bad-points">0</span></div><div class="stat-lbl">Pts. malos</div></div>
+  </div>
+  <div class="manage-section">
+    <div class="manage-title">⚙️ Gestionar tareas</div>
+    <div class="add-task-form">
+      <input id="task-emoji" type="text" placeholder="😊" maxlength="2" style="max-width:50px">
+      <input id="task-name" type="text" placeholder="Nombre de la tarea..." >
+      <button onclick="addTask()">+ Agregar</button>
+    </div>
+    <div class="tasks-list" id="tasks-list"></div>
   </div>
   <div class="tasks-section">
     <div class="tasks-header">
@@ -189,27 +216,22 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const TASKS=[
-  {id:'t1',e:'🚿',name:'Se bañó sin llorar'},
-  {id:'t2',e:'🌅',name:'Se levantó para la escuela sin llorar'},
-  {id:'t3',e:'🍽️',name:'Comió sus alimentos sin llorar'},
-  {id:'t4',e:'💬',name:'No le gritó a mamá'},
-  {id:'t5',e:'🤐',name:'No le respondió mal a mamá'},
-  {id:'t6',e:'🎒',name:'Sacó su portacomida del bolso'},
-  {id:'t7',e:'😊',name:'No renegó de la comida'},
-  {id:'t8',e:'👕',name:'Llevó la ropa sucia al cesto'},
-  {id:'t9',e:'🛁',name:'Sacó la ropa sucia del baño'},
-  {id:'t10',e:'🛏️',name:'Tendió su cama'},
-  {id:'t11',e:'📚',name:'Hizo las tareas del colegio'},
-  {id:'t12',e:'🦷',name:'Se lavó los dientes sin que le dijeran'},
-  {id:'t13',e:'🌙',name:'Se fue a dormir a la hora'},
-  {id:'t14',e:'🙏',name:'Pidió las cosas con amabilidad'},
-];
-
 const DAYS_ES=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MONTHS_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
-let data={}, prizes={}, currentWeek=0, histOffset=0;
+let data={}, prizes={}, TASKS=[], currentWeek=0, histOffset=0;
+
+// Cargar tareas de Firebase
+const tasksRef = ref(db,'tareas');
+onValue(tasksRef,(snap)=>{
+  const tasksData=snap.val();
+  if(tasksData){
+    TASKS=Object.keys(tasksData).map(id=>({id,...tasksData[id]}));
+  }else{
+    TASKS=[];
+  }
+  setSyncOk(); render(); renderHistorial(); renderTasksList();
+},(e)=>setSyncErr());
 
 onValue(ref(db,'comportamiento'),(snap)=>{
   data=snap.val()||{};
@@ -228,8 +250,13 @@ function setSyncOk(){const b=document.getElementById('sync-bar');b.className='sy
 function setSyncErr(){const b=document.getElementById('sync-bar');b.className='sync-bar sync-err';b.textContent='❌ Sin conexión — verifica internet o reglas de Firebase';}
 
 async function toggle(taskId,dateStr){
-  const cur=data[dateStr]?.[taskId]||false;
-  await set(ref(db,`comportamiento/${dateStr}/${taskId}`),!cur);
+  const cur=data[dateStr]?.[taskId]||null;
+  let next=null;
+  // Cicla: null -> 'good' -> 'bad' -> null
+  if(cur===null||cur===undefined||cur===false){next='good';}
+  else if(cur==='good'){next='bad';}
+  else{next=null;}
+  await set(ref(db,`comportamiento/${dateStr}/${taskId}`),next);
 }
 
 document.getElementById('gift-input').addEventListener('input',async(e)=>{
@@ -239,6 +266,38 @@ document.getElementById('gift-input').addEventListener('input',async(e)=>{
 
 document.getElementById('hist-prev').onclick=()=>{histOffset--;renderHistorial();};
 document.getElementById('hist-next').onclick=()=>{histOffset++;renderHistorial();};
+
+async function addTask(){
+  const emoji=document.getElementById('task-emoji').value.trim()||'📋';
+  const name=document.getElementById('task-name').value.trim();
+  if(!name){alert('Escribe el nombre de la tarea');return;}
+  const id='t'+Date.now();
+  await set(ref(db,`tareas/${id}`),{e:emoji,name:name});
+  document.getElementById('task-emoji').value='';
+  document.getElementById('task-name').value='';
+}
+
+async function deleteTask(taskId){
+  if(!confirm('¿Estás seguro de que quieres eliminar esta tarea?'))return;
+  await set(ref(db,`tareas/${taskId}`),null);
+}
+
+function renderTasksList(){
+  const list=document.getElementById('tasks-list');
+  if(TASKS.length===0){
+    list.innerHTML='<p style="text-align:center;color:#A08060;font-size:12px;font-weight:600">No hay tareas aún. ¡Agrega una!</p>';
+    return;
+  }
+  list.innerHTML=TASKS.map(task=>`
+    <div class="task-item">
+      <div class="task-item-content">
+        <span class="task-item-emoji">${task.e}</span>
+        <span class="task-item-name">${task.name}</span>
+      </div>
+      <button class="task-item-remove" onclick="deleteTask('${task.id}')">Eliminar</button>
+    </div>
+  `).join('');
+}
 
 window.switchTab=function(tab){
   ['tracker','historial'].forEach(t=>{
@@ -253,14 +312,17 @@ function monthKey(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
 
 function monthScoreFor(y,m){
-  let s=0,max=0;
+  let s=0,bad=0,max=0;
   const days=daysInMonth(y,m);
   for(let i=1;i<=days;i++){
     max+=TASKS.length;
     const dk=dateKey(new Date(y,m,i));
-    if(data[dk])Object.values(data[dk]).forEach(v=>{if(v)s++;});
+    if(data[dk])Object.values(data[dk]).forEach(v=>{
+      if(v==='good')s++;
+      else if(v==='bad')bad++;
+    });
   }
-  return{s,max,days};
+  return{s,bad,max,days};
 }
 
 function renderHistorial(){
@@ -271,7 +333,7 @@ function renderHistorial(){
   document.getElementById('hist-next').disabled=isCurrentOrFuture;
   document.getElementById('hist-title').textContent=`${MONTHS_ES[m]} ${y}`;
 
-  const {s,max,days}=monthScoreFor(y,m);
+  const {s,bad,max,days}=monthScoreFor(y,m);
   const pct=max>0?s/max:0, pctR=Math.round(pct*100);
   const mk=monthKey(hd);
   const prize=prizes[mk]||'';
@@ -282,14 +344,14 @@ function renderHistorial(){
 
   let bestDay=0,bestDayNum=0,activeDays=0;
   for(let i=1;i<=days;i++){
-    const ds=data[dateKey(new Date(y,m,i))]?Object.values(data[dateKey(new Date(y,m,i))]).filter(v=>v).length:0;
+    const ds=data[dateKey(new Date(y,m,i))]?Object.values(data[dateKey(new Date(y,m,i))]).filter(v=>v==='good').length:0;
     if(ds>0)activeDays++;
     if(ds>bestDay){bestDay=ds;bestDayNum=i;}
   }
 
   document.getElementById('hist-summary').innerHTML=`
-    <div class="hist-stat"><div class="hist-stat-num">${s}</div><div class="hist-stat-lbl">Estrellas ganadas</div></div>
-    <div class="hist-stat"><div class="hist-stat-num">${max}</div><div class="hist-stat-lbl">Posibles</div></div>
+    <div class="hist-stat"><div class="hist-stat-num">✅${s}</div><div class="hist-stat-lbl">Pts. buenos</div></div>
+    <div class="hist-stat"><div class="hist-stat-num">❌${bad}</div><div class="hist-stat-lbl">Pts. malos</div></div>
     <div class="hist-stat"><div class="hist-stat-num">${activeDays}</div><div class="hist-stat-lbl">Días activos</div></div>
     <div class="hist-stat"><div class="hist-stat-num">${bestDay}${bestDayNum?'<span style="display:block;font-size:10px;color:#A08060;font-weight:600">día '+bestDayNum+'</span>':''}</div><div class="hist-stat-lbl">Mejor día</div></div>
   `;
@@ -311,13 +373,13 @@ function renderHistorial(){
   for(let i=0;i<offset;i++){const e=document.createElement('div');e.className='hist-day';grid.appendChild(e);}
   for(let i=1;i<=days;i++){
     const isFuture=new Date(y,m,i)>now;
-    const ds=!isFuture&&data[dateKey(new Date(y,m,i))]?Object.values(data[dateKey(new Date(y,m,i))]).filter(v=>v).length:0;
-    const tp=Math.round((ds/TASKS.length)*100);
+    const ds=!isFuture&&data[dateKey(new Date(y,m,i))]?Object.values(data[dateKey(new Date(y,m,i))]).filter(v=>v==='good').length:0;
+    const tp=TASKS.length>0?Math.round((ds/TASKS.length)*100):0;
     const bg=isFuture?'#F5F0E8':ds===0?'#F5F0E8':tp>=80?'#C8F0DC':tp>=50?'#FFF4CC':'#FFE0DC';
     const tc=isFuture?'#C0B090':ds===0?'#C0B090':tp>=80?'#1A6B45':tp>=50?'#8A6000':'#9A2020';
     const e=document.createElement('div');
     e.className='hist-day';e.style.background=bg;
-    e.innerHTML=`<span class="hist-day-num" style="color:${tc}">${i}</span>${ds>0?`<span class="hist-day-stars" style="color:${tc}">⭐${ds}</span>`:''}`;
+    e.innerHTML=`<span class="hist-day-num" style="color:${tc}">${i}</span>${ds>0?`<span class="hist-day-stars" style="color:${tc}">✅${ds}</span>`:''}`;
     grid.appendChild(e);
   }
 
@@ -327,10 +389,10 @@ function renderHistorial(){
     let count=0;
     for(let i=1;i<=days;i++){
       const d=new Date(y,m,i);
-      if(d<=now&&data[dateKey(d)]&&data[dateKey(d)][task.id])count++;
+      if(d<=now&&data[dateKey(d)]&&data[dateKey(d)][task.id]==='good')count++;
     }
-    const activeDaysCount=Math.min(days,Math.ceil((Math.min(now,new Date(y,m+1,0))-new Date(y,m,1))/(1000*60*60*24))+1);
-    const tp=activeDaysCount>0?Math.round((count/activeDaysCount)*100):0;
+    const activeDaysCount=Math.max(1,Math.min(days,Math.ceil((Math.min(now,new Date(y,m+1,0))-new Date(y,m,1))/(1000*60*60*24))+1));
+    const tp=Math.round((count/activeDaysCount)*100);
     const bc=tp>=80?'#3BB87F':tp>=50?'#F5A623':'#E05555';
     const row=document.createElement('div');row.className='hist-task-row';
     row.innerHTML=`<span class="hist-task-name">${task.e} ${task.name}</span><div class="hist-task-bar-wrap"><div class="hist-task-bar" style="width:${tp}%;background:${bc}"></div></div><span class="hist-task-pct">${tp}%</span>`;
@@ -347,13 +409,14 @@ function getWeekDates(offset=0){
   const s=getWeekStart(offset);
   return Array.from({length:7},(_,i)=>{const d=new Date(s);d.setDate(s.getDate()+i);return d;});
 }
-function weekScore(dates){let s=0;dates.forEach(d=>{const dk=dateKey(d);if(data[dk])Object.values(data[dk]).forEach(v=>{if(v)s++;});});return s;}
-function todayScore(){const dk=dateKey(new Date());if(!data[dk])return 0;return Object.values(data[dk]).filter(v=>v).length;}
+function weekScore(dates){let s=0,bad=0;dates.forEach(d=>{const dk=dateKey(d);if(data[dk]){Object.values(data[dk]).forEach(v=>{if(v==='good')s++;else if(v==='bad')bad++;});}});return{good:s,bad:bad};}
+function todayScore(){const dk=dateKey(new Date());if(!data[dk])return{good:0,bad:0};let good=0,bad=0;Object.values(data[dk]).forEach(v=>{if(v==='good')good++;else if(v==='bad')bad++;});return{good,bad};}
 function calcStreak(){
+  if(TASKS.length===0)return 0;
   let streak=0;const now=new Date();
   for(let i=0;i<60;i++){
     const d=new Date(now);d.setDate(now.getDate()-i);
-    const s=data[dateKey(d)]?Object.values(data[dateKey(d)]).filter(v=>v).length:0;
+    let s=0;if(data[dateKey(d)])Object.values(data[dateKey(d)]).forEach(v=>{if(v==='good')s++;});
     if(s>=Math.floor(TASKS.length*0.5))streak++;else break;
   }return streak;
 }
@@ -374,15 +437,19 @@ function drawTree(pct){
 function render(){
   const dates=getWeekDates(currentWeek);
   const now=new Date();
-  const {s:ms,max:mm}=monthScoreFor(now.getFullYear(),now.getMonth());
+  const {s:ms,bad:mbad,max:mm}=monthScoreFor(now.getFullYear(),now.getMonth());
   const pct=mm>0?ms/mm:0,pctR=Math.round(pct*100);
   document.getElementById('month-label').textContent=`${MONTHS_ES[now.getMonth()]} ${now.getFullYear()}`;
   document.getElementById('total-score').textContent=ms;
   document.getElementById('max-score').textContent=mm;
   document.getElementById('progress-bar').style.width=pctR+'%';
   document.getElementById('progress-txt').textContent=pctR+'%';
-  document.getElementById('week-score').textContent=weekScore(dates);
-  document.getElementById('today-score').textContent=todayScore();
+  const weekS=weekScore(dates);
+  const todayS=todayScore();
+  document.getElementById('week-score').textContent=weekS.good;
+  document.getElementById('today-score').textContent=todayS.good;
+  document.getElementById('good-points').textContent=ms;
+  document.getElementById('bad-points').textContent=mbad;
   document.getElementById('streak').textContent=calcStreak();
   const rm=document.getElementById('reward-msg');
   if(pct>=1){rm.className='reward-msg reward-win';rm.textContent='🏆 ¡PREMIO GANADO! ¡Eres increíble!';}
@@ -410,10 +477,18 @@ function render(){
     let cells=`<div class="task-name"><span class="task-emoji">${task.e}</span>${task.name}</div>`;
     dates.forEach(d=>{
       const dk=dateKey(d);
-      const on=data[dk]&&data[dk][task.id];
+      const state=data[dk]&&data[dk][task.id]?data[dk][task.id]:null;
       const isFuture=d>now&&dateKey(d)!==dateKey(now);
-      cells+=`<div><button class="star-btn${on?' on':''}" data-task="${task.id}" data-date="${dk}"${isFuture?' style="opacity:0.3;pointer-events:none"':''}>
-        <svg width="22" height="22" viewBox="0 0 20 20"><polygon points="10,2 12.5,7.5 18.5,8 14,12.5 15.5,18.5 10,15.5 4.5,18.5 6,12.5 1.5,8 7.5,7.5" fill="${on?'#FFD166':'#E8E0D4'}" stroke="${on?'#F5A623':'#CCC0B0'}" stroke-width="1"/></svg>
+      let btnHTML='';
+      if(state==='good'){
+        btnHTML=`<svg width="22" height="22" viewBox="0 0 20 20"><polygon points="10,2 12.5,7.5 18.5,8 14,12.5 15.5,18.5 10,15.5 4.5,18.5 6,12.5 1.5,8 7.5,7.5" fill="#FFD166" stroke="#F5A623" stroke-width="1.5"/></svg>`;
+      }else if(state==='bad'){
+        btnHTML=`<svg width="22" height="22" viewBox="0 0 20 20"><g fill="none" stroke="#E05555" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="4" x2="16" y2="16"/><line x1="16" y1="4" x2="4" y2="16"/></g></svg>`;
+      }else{
+        btnHTML=`<svg width="22" height="22" viewBox="0 0 20 20"><polygon points="10,2 12.5,7.5 18.5,8 14,12.5 15.5,18.5 10,15.5 4.5,18.5 6,12.5 1.5,8 7.5,7.5" fill="#E8E0D4" stroke="#CCC0B0" stroke-width="1"/></svg>`;
+      }
+      cells+=`<div><button class="star-btn${state==='good'?' good':state==='bad'?' bad':''}" data-task="${task.id}" data-date="${dk}"${isFuture?' style="opacity:0.3;pointer-events:none"':''}>
+        ${btnHTML}
       </button></div>`;
     });
     row.innerHTML=cells;body.appendChild(row);
