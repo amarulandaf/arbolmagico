@@ -137,15 +137,15 @@ input[type=text]{font-family:var(--font-main)}
   <div class="child-name-display" id="child-name-display">¿Cuál es tu nombre?</div>
   <div class="child-name-input-wrap">
     <input id="child-name-input" type="text" class="child-name-input" placeholder="Escribe el nombre del niño...">
-    <button id="child-name-save-btn" class="child-name-save-btn" onclick="saveChildName()">💾 Guardar</button>
+    <button id="child-name-save-btn" class="child-name-save-btn" onclick="window.saveChildName()">💾 Guardar</button>
   </div>
 </div>
 
 <div id="sync-bar" class="sync-bar sync-off">⏳ Conectando con Firebase...</div>
 
 <div class="tabs">
-  <button class="tab active" id="tab-tracker" onclick="switchTab('tracker')">🌳 Este mes</button>
-  <button class="tab" id="tab-historial" onclick="switchTab('historial')">📅 Historial</button>
+  <button class="tab active" id="tab-tracker" onclick="window.switchTab('tracker')">🌳 Este mes</button>
+  <button class="tab" id="tab-historial" onclick="window.switchTab('historial')">📅 Historial</button>
 </div>
 
 <!-- TRACKER -->
@@ -156,7 +156,10 @@ input[type=text]{font-family:var(--font-main)}
   </div>
   <div class="gift-zone">
     <div class="gift-title">🎁 Premio del mes</div>
-    <input id="gift-input" type="text" placeholder="¿Qué quieres ganar este mes? Escribe aquí..." style="width:100%;padding:8px 14px;border:1.5px solid #EDD9B0;border-radius:10px;font-size:13px;color:#5A3E1B;background:#FFFAEF;margin-bottom:10px">
+    <div style="display:flex;gap:8px;align-items:stretch;margin-bottom:10px">
+      <input id="gift-input" type="text" placeholder="¿Qué quieres ganar este mes? Escribe aquí..." style="flex:1;padding:8px 14px;border:1.5px solid #EDD9B0;border-radius:10px;font-size:13px;color:#5A3E1B;background:#FFFAEF">
+      <button id="gift-save-btn" onclick="window.saveGift()" style="padding:8px 14px;background:var(--gold2);color:#2B1704;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:0.15s">💾 Guardar</button>
+    </div>
     <div class="progress-bar-wrap">
       <div class="progress-bar" id="progress-bar" style="width:0%"></div>
       <div class="progress-txt" id="progress-txt">0%</div>
@@ -176,7 +179,7 @@ input[type=text]{font-family:var(--font-main)}
     <div class="stat-card"><div class="stat-num">✅ <span id="good-points">0</span></div><div class="stat-lbl">Pts. buenos</div></div>
     <div class="stat-card"><div class="stat-num">❌ <span id="bad-points">0</span></div><div class="stat-lbl">Pts. malos</div></div>
   </div>
-  <button class="manage-btn" onclick="openTasksModal()">⚙️ Gestionar tareas</button>
+  <button class="manage-btn" onclick="window.openTasksModal()">⚙️ Gestionar tareas</button>
   <div class="tasks-section">
     <div class="tasks-header">
       <div>Tarea</div>
@@ -190,7 +193,7 @@ input[type=text]{font-family:var(--font-main)}
   <div class="reset-section">
     <span class="reset-title">⚠️ Zona de administración</span>
     <span class="reset-desc">Elimina todo y comienza de nuevo</span>
-    <button onclick="resetSystem()" class="reset-btn">🔄 Reiniciar Sistema</button>
+    <button onclick="window.resetSystem()" class="reset-btn">🔄 Reiniciar Sistema</button>
   </div>
 </div>
 
@@ -199,12 +202,12 @@ input[type=text]{font-family:var(--font-main)}
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title">⚙️ Gestionar tareas</span>
-      <button class="modal-close" onclick="closeTasksModal()">✕</button>
+      <button class="modal-close" onclick="window.closeTasksModal()">✕</button>
     </div>
     <div class="add-task-form">
       <input id="task-emoji" type="text" placeholder="😊" maxlength="2" style="max-width:50px">
       <input id="task-name" type="text" placeholder="Nombre de la tarea..." >
-      <button onclick="addTask()" style="padding:10px 16px;background:var(--green2);border:2px solid var(--green);border-radius:8px;font-weight:700;color:#5A3E1B;cursor:pointer;font-size:13px;transition:background 0.2s">💾 Añadir tarea</button>
+      <button onclick="window.addTask()" style="padding:10px 16px;background:var(--green2);border:2px solid var(--green);border-radius:8px;font-weight:700;color:#5A3E1B;cursor:pointer;font-size:13px;transition:background 0.2s">💾 Añadir tarea</button>
     </div>
     <div class="tasks-list" id="tasks-list"></div>
   </div>
@@ -303,7 +306,7 @@ onValue(tasksRef,(snap)=>{
     tasksInitialized = true;
   }else if(!tasksInitialized){
     // Inicializar con tareas por defecto solo una vez
-    initializeDefaultTasks();
+    window.initializeDefaultTasks();
     tasksInitialized = true;
     TASKS=[];
   }else{
@@ -312,7 +315,7 @@ onValue(tasksRef,(snap)=>{
   setSyncOk(); render(); renderHistorial(); renderTasksList();
 },(e)=>setSyncErr());
 
-async function initializeDefaultTasks(){
+window.initializeDefaultTasks = async function(){
   const tasksObj={};
   DEFAULT_TASKS.forEach((task,i)=>{
     const id='default_'+(i+1);
@@ -347,12 +350,21 @@ async function toggle(taskId,dateStr){
   await set(ref(db,`comportamiento/${dateStr}/${taskId}`),next);
 }
 
-document.getElementById('gift-input').addEventListener('input',async(e)=>{
+window.saveGift = async function(){
   const mk=monthKey(new Date());
-  await set(ref(db,`premios/${mk}`),e.target.value);
-});
+  const giftValue=document.getElementById('gift-input').value.trim();
+  await set(ref(db,`premios/${mk}`),giftValue);
+  const btn=document.getElementById('gift-save-btn');
+  const originalText=btn.textContent;
+  btn.textContent='✅ ¡Guardado!';
+  btn.style.background='var(--green2)';
+  setTimeout(()=>{
+    btn.textContent=originalText;
+    btn.style.background='var(--gold2)';
+  },1500);
+}
 
-async function saveChildName(){
+window.saveChildName = async function(){
   const name=document.getElementById('child-name-input').value.trim();
   if(!name){alert('Por favor escribe el nombre del niño');return;}
   await set(ref(db,'config/childName'),name);
@@ -366,11 +378,11 @@ async function saveChildName(){
   },1500);
 }
 
-function openTasksModal(){
+window.openTasksModal = function(){
   document.getElementById('tasks-modal').classList.add('active');
 }
 
-function closeTasksModal(){
+window.closeTasksModal = function(){
   document.getElementById('tasks-modal').classList.remove('active');
 }
 
@@ -379,7 +391,7 @@ setTimeout(()=>{
   const tasksModal=document.getElementById('tasks-modal');
   if(tasksModal){
     tasksModal.addEventListener('click',(e)=>{
-      if(e.target.id==='tasks-modal') closeTasksModal();
+      if(e.target.id==='tasks-modal') window.closeTasksModal();
     });
   }
 },100);
@@ -387,7 +399,7 @@ setTimeout(()=>{
 document.getElementById('hist-prev').onclick=()=>{histOffset--;renderHistorial();};
 document.getElementById('hist-next').onclick=()=>{histOffset++;renderHistorial();};
 
-async function addTask(){
+window.addTask = async function(){
   const emoji=document.getElementById('task-emoji').value.trim()||'📋';
   const name=document.getElementById('task-name').value.trim();
   if(!name){alert('Escribe el nombre de la tarea');return;}
@@ -407,12 +419,12 @@ async function addTask(){
   },1500);
 }
 
-async function deleteTask(taskId){
+window.deleteTask = async function(taskId){
   if(!confirm('¿Estás seguro de que quieres eliminar esta tarea?'))return;
   await set(ref(db,`tareas/${taskId}`),null);
 }
 
-async function resetSystem(){
+window.resetSystem = async function(){
   if(!confirm('⚠️ ¿Estás SEGURO? Esto eliminará TODO:\n- Nombre del niño\n- Todas las tareas\n- Todo el historial y puntos\n\n¿Deseas continuar?'))return;
   if(!confirm('Esta acción NO se puede deshacer. ¿Definitivamente quieres reiniciar?'))return;
   
@@ -441,7 +453,7 @@ async function resetSystem(){
     
     // Paso 4: Registrar tareas por defecto
     syncBar.textContent='📋 Registrando tareas por defecto...';
-    await initializeDefaultTasks();
+    await window.initializeDefaultTasks();
     
     // Pequeña pausa para asegurar que se sincroniza
     await new Promise(resolve=>setTimeout(resolve,1000));
@@ -470,7 +482,7 @@ function renderTasksList(){
         <span class="task-item-emoji">${task.e}</span>
         <span class="task-item-name">${task.name}</span>
       </div>
-      <button class="task-item-remove" onclick="deleteTask('${task.id}')">Eliminar</button>
+      <button class="task-item-remove" onclick="window.deleteTask('${task.id}')">Eliminar</button>
     </div>
   `).join('');
 }
