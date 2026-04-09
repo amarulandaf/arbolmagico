@@ -104,12 +104,33 @@ input[type=text]{font-family:var(--font-main)}
 .task-item-name{font-size:13px;color:#5A3E1B;font-weight:600;flex:1}
 .task-item-remove{background:#FFE0DC;border:none;color:#9A2020;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:700;font-size:12px;transition:background 0.2s}
 .task-item-remove:hover{background:#E05555;color:#fff}
+.child-name-section{background:var(--card);border:2px solid var(--gold2);border-radius:16px;padding:14px;margin-bottom:14px;text-align:center}
+.child-name-label{font-size:12px;color:#A08060;font-weight:600;margin-bottom:6px;display:block}
+.child-name-display{font-family:var(--font-title);font-size:24px;color:#5A3E1B;font-weight:800;margin-bottom:10px;min-height:30px}
+.child-name-input-wrap{display:flex;gap:8px;margin-top:8px;align-items:center}
+.child-name-input{flex:1;padding:10px 14px;border:1.5px solid #EDD9B0;border-radius:10px;font-size:14px;color:#5A3E1B;background:#FFFAEF;font-family:var(--font-main);font-weight:600}
+.child-name-save-btn{padding:10px 20px;background:var(--gold2);border:2px solid var(--gold);border-radius:10px;font-weight:700;color:#5A3E1B;cursor:pointer;font-size:13px;transition:background 0.2s;font-family:var(--font-title)}
+.child-name-save-btn:hover{background:var(--gold)}
+.reset-section{background:#FFEDED;border:2px solid #E05555;border-radius:16px;padding:14px;margin-top:20px;text-align:center}
+.reset-title{font-family:var(--font-title);font-size:13px;color:#9A2020;font-weight:800;margin-bottom:8px;display:block}
+.reset-desc{font-size:11px;color:#9A2020;margin-bottom:10px;display:block;font-weight:600}
+.reset-btn{padding:8px 18px;background:#E05555;border:2px solid #9A2020;border-radius:8px;font-weight:700;color:#fff;cursor:pointer;font-size:12px;transition:background 0.2s;font-family:var(--font-title)}
+.reset-btn:hover{background:#9A2020}
 </style>
 </head>
 <body>
 
 <h1>🌟 Mi Árbol Mágico 🌟</h1>
 <p class="subtitle">¡Gana estrellas cada día y consigue tu regalo!</p>
+
+<div id="child-name-section" class="child-name-section" style="display:none">
+  <span class="child-name-label">👶 Nombre del niño:</span>
+  <div class="child-name-display" id="child-name-display"></div>
+  <div class="child-name-input-wrap">
+    <input id="child-name-input" type="text" class="child-name-input" placeholder="Escribe el nombre del niño...">
+    <button id="child-name-save-btn" class="child-name-save-btn" onclick="saveChildName()">💾 Guardar</button>
+  </div>
+</div>
 
 <div id="sync-bar" class="sync-bar sync-off">⏳ Conectando con Firebase...</div>
 
@@ -151,7 +172,7 @@ input[type=text]{font-family:var(--font-main)}
     <div class="add-task-form">
       <input id="task-emoji" type="text" placeholder="😊" maxlength="2" style="max-width:50px">
       <input id="task-name" type="text" placeholder="Nombre de la tarea..." >
-      <button onclick="addTask()">+ Agregar</button>
+      <button onclick="addTask()" style="padding:10px 16px;background:var(--green2);border:2px solid var(--green);border-radius:8px;font-weight:700;color:#5A3E1B;cursor:pointer;font-size:13px;transition:background 0.2s">💾 Añadir tarea</button>
     </div>
     <div class="tasks-list" id="tasks-list"></div>
   </div>
@@ -164,6 +185,11 @@ input[type=text]{font-family:var(--font-main)}
       <div class="day-header" id="dh6"></div>
     </div>
     <div id="tasks-body"></div>
+  </div>
+  <div class="reset-section">
+    <span class="reset-title">⚠️ Zona de administración</span>
+    <span class="reset-desc">Elimina todo y comienza de nuevo</span>
+    <button onclick="resetSystem()" class="reset-btn">🔄 Reiniciar Sistema</button>
   </div>
 </div>
 
@@ -219,19 +245,64 @@ const db = getDatabase(app);
 const DAYS_ES=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MONTHS_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
-let data={}, prizes={}, TASKS=[], currentWeek=0, histOffset=0;
+const DEFAULT_TASKS=[
+  {e:'🚿',name:'Se bañó sin llorar'},
+  {e:'🌅',name:'Se levantó para la escuela sin llorar'},
+  {e:'🍽️',name:'Comió sus alimentos sin llorar'},
+  {e:'💬',name:'No le gritó a mamá'},
+  {e:'🤐',name:'No le respondió mal a mamá'},
+  {e:'🎒',name:'Sacó su portacomida del bolso'},
+  {e:'😊',name:'No renegó de la comida'},
+  {e:'👕',name:'Llevó la ropa sucia al cesto'},
+  {e:'🛁',name:'Sacó la ropa sucia del baño'},
+  {e:'🛏️',name:'Tendió su cama'},
+  {e:'📚',name:'Hizo las tareas del colegio'},
+  {e:'🦷',name:'Se lavó los dientes sin que le dijeran'},
+  {e:'🌙',name:'Se fue a dormir a la hora'},
+  {e:'🙏',name:'Pidió las cosas con amabilidad'},
+];
+
+let data={}, prizes={}, TASKS=[], childName='', currentWeek=0, histOffset=0;
+
+// Cargar nombre del niño de Firebase
+const childNameRef = ref(db,'config/childName');
+onValue(childNameRef,(snap)=>{
+  childName=snap.val()||'';
+  document.getElementById('child-name-display').textContent=childName||'(nombre no definido)';
+  if(childName){
+    document.getElementById('child-name-section').style.display='block';
+    document.getElementById('child-name-input').value=childName;
+  }
+});
 
 // Cargar tareas de Firebase
 const tasksRef = ref(db,'tareas');
+let tasksInitialized = false;
+
 onValue(tasksRef,(snap)=>{
   const tasksData=snap.val();
   if(tasksData){
     TASKS=Object.keys(tasksData).map(id=>({id,...tasksData[id]}));
+    tasksInitialized = true;
+  }else if(!tasksInitialized){
+    // Inicializar con tareas por defecto solo una vez
+    initializeDefaultTasks();
+    tasksInitialized = true;
+    TASKS=[];
   }else{
     TASKS=[];
   }
   setSyncOk(); render(); renderHistorial(); renderTasksList();
 },(e)=>setSyncErr());
+
+async function initializeDefaultTasks(){
+  const tasksObj={};
+  DEFAULT_TASKS.forEach((task,i)=>{
+    const id='default_'+(i+1);
+    tasksObj[id]={e:task.e,name:task.name};
+  });
+  await set(ref(db,'tareas'),tasksObj);
+}
 
 onValue(ref(db,'comportamiento'),(snap)=>{
   data=snap.val()||{};
@@ -264,6 +335,20 @@ document.getElementById('gift-input').addEventListener('input',async(e)=>{
   await set(ref(db,`premios/${mk}`),e.target.value);
 });
 
+async function saveChildName(){
+  const name=document.getElementById('child-name-input').value.trim();
+  if(!name){alert('Por favor escribe el nombre del niño');return;}
+  await set(ref(db,'config/childName'),name);
+  const btn=document.getElementById('child-name-save-btn');
+  const originalText=btn.textContent;
+  btn.textContent='✅ ¡Guardado!';
+  btn.style.background='var(--green2)';
+  setTimeout(()=>{
+    btn.textContent=originalText;
+    btn.style.background='var(--gold2)';
+  },1500);
+}
+
 document.getElementById('hist-prev').onclick=()=>{histOffset--;renderHistorial();};
 document.getElementById('hist-next').onclick=()=>{histOffset++;renderHistorial();};
 
@@ -275,11 +360,67 @@ async function addTask(){
   await set(ref(db,`tareas/${id}`),{e:emoji,name:name});
   document.getElementById('task-emoji').value='';
   document.getElementById('task-name').value='';
+  
+  // Feedback visual
+  const btn=document.querySelector('.manage-section button');
+  const originalText=btn.textContent;
+  btn.textContent='✅ ¡Agregada!';
+  btn.style.background='var(--green)';
+  setTimeout(()=>{
+    btn.textContent=originalText;
+    btn.style.background='var(--green2)';
+  },1500);
 }
 
 async function deleteTask(taskId){
   if(!confirm('¿Estás seguro de que quieres eliminar esta tarea?'))return;
   await set(ref(db,`tareas/${taskId}`),null);
+}
+
+async function resetSystem(){
+  if(!confirm('⚠️ ¿Estás SEGURO? Esto eliminará TODO:\n- Nombre del niño\n- Todas las tareas\n- Todo el historial y puntos\n\n¿Deseas continuar?'))return;
+  if(!confirm('Esta acción NO se puede deshacer. ¿Definitivamente quieres reiniciar?'))return;
+  
+  try{
+    // Mostrar que está limpiando
+    const syncBar=document.getElementById('sync-bar');
+    syncBar.className='sync-bar sync-off';
+    syncBar.textContent='🔄 Reiniciando sistema...';
+    
+    // Paso 1: Limpiar todo
+    await set(ref(db,'config/childName'),null);
+    await set(ref(db,'tareas'),null);
+    await set(ref(db,'comportamiento'),null);
+    await set(ref(db,'premios'),null);
+    
+    // Paso 2: Reinicializar valores locales
+    childName='';
+    TASKS=[];
+    data={};
+    prizes={};
+    
+    // Paso 3: Limpiar UI
+    document.getElementById('child-name-input').value='';
+    document.getElementById('child-name-display').textContent='(nombre no definido)';
+    document.getElementById('gift-input').value='';
+    
+    // Paso 4: Registrar tareas por defecto
+    syncBar.textContent='📋 Registrando tareas por defecto...';
+    await initializeDefaultTasks();
+    
+    // Pequeña pausa para asegurar que se sincroniza
+    await new Promise(resolve=>setTimeout(resolve,1000));
+    
+    // Paso 5: Éxito
+    syncBar.className='sync-bar sync-ok';
+    syncBar.textContent='✅ Sistema reiniciado. Recargando...';
+    
+    // Recargar después de 1.5 segundos
+    setTimeout(()=>{location.reload();},1500);
+  }catch(err){
+    alert('❌ Error al reiniciar: '+err.message);
+    console.error(err);
+  }
 }
 
 function renderTasksList(){
