@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌟 Mi Árbol Mágico de Comportamiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#F5A623;--gold2:#FFD166;--green:#3BB87F;--green2:#A8E6C5;
+  --bg:#FFF9F0;--card:#FFFDF7;
+  --font-main:'Nunito',sans-serif;--font-title:'Baloo 2',cursive;
+}
+body{font-family:var(--font-main);background:var(--bg);padding:16px;min-height:100vh;max-width:720px;margin:0 auto}
+h1{font-family:var(--font-title);font-size:26px;color:#5A3E1B;text-align:center;margin-bottom:4px}
+.subtitle{text-align:center;font-size:14px;color:#A08060;margin-bottom:12px}
+.sync-bar{text-align:center;font-size:12px;padding:6px 12px;border-radius:8px;margin-bottom:12px;font-weight:700;transition:all 0.3s}
+.sync-ok{background:#E6F9EE;color:#2A7D55}
+.sync-off{background:#FFF8E0;color:#9A6A00}
+.sync-err{background:#FFEDED;color:#C03030}
+.tabs{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
+.tab{font-family:var(--font-title);font-size:15px;font-weight:700;padding:8px 22px;border-radius:20px;border:2px solid #EDD9B0;background:var(--card);color:#A08060;cursor:pointer;transition:all 0.2s}
+.tab.active{background:var(--gold2);border-color:var(--gold);color:#5A3E1B}
+.view{display:none}
+.view.active{display:block}
+.top-row{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.month-label{font-family:var(--font-title);font-size:20px;color:#5A3E1B;font-weight:800;text-transform:capitalize}
+.score-badge{background:var(--gold2);color:#5A3E1B;padding:5px 16px;border-radius:20px;font-weight:800;font-size:16px;border:2px solid var(--gold)}
+.gift-zone{background:var(--card);border:2px solid var(--gold2);border-radius:16px;padding:14px 16px;margin-bottom:14px;text-align:center}
+.gift-title{font-family:var(--font-title);font-size:16px;color:#5A3E1B;margin-bottom:8px}
+.progress-bar-wrap{background:#EDE0CC;border-radius:20px;height:22px;overflow:hidden;position:relative}
+.progress-bar{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--green2),var(--green));transition:width 0.6s}
+.progress-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.25);pointer-events:none}
+.tree-wrap{display:flex;justify-content:center;margin:10px 0 16px}
+.tasks-section{background:var(--card);border:1.5px solid #EDD9B0;border-radius:16px;overflow:hidden;margin-bottom:14px}
+.tasks-header{display:grid;grid-template-columns:1fr repeat(7,38px);font-size:11px;font-weight:700;color:#A08060;background:#FFF3DC;padding:8px 12px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #EDD9B0}
+.day-header{text-align:center;font-size:10px}
+.task-row{display:grid;grid-template-columns:1fr repeat(7,38px);align-items:center;padding:7px 12px;border-bottom:0.5px solid #F0E6D0;transition:background 0.15s}
+.task-row:hover{background:#FFFAEF}
+.task-row:last-child{border-bottom:none}
+.task-name{font-size:12px;color:#5A3E1B;font-weight:600;padding-right:6px;line-height:1.3}
+.task-emoji{font-size:15px;margin-right:5px}
+.star-btn{width:30px;height:30px;border:none;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;margin:0 auto;border-radius:50%;transition:transform 0.15s}
+.star-btn:hover{transform:scale(1.25)}
+.star-btn.on{filter:drop-shadow(0 0 3px var(--gold))}
+.nav-row{display:flex;justify-content:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.nav-btn{background:var(--card);border:1.5px solid #EDD9B0;border-radius:10px;padding:6px 16px;font-family:var(--font-main);font-weight:700;font-size:13px;color:#5A3E1B;cursor:pointer;transition:background 0.15s}
+.nav-btn:hover{background:#FFF3DC}
+.nav-btn.active{background:var(--gold2);border-color:var(--gold)}
+.stats-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+.stat-card{background:var(--card);border:1.5px solid #EDD9B0;border-radius:12px;padding:10px 18px;text-align:center;min-width:90px}
+.stat-num{font-family:var(--font-title);font-size:22px;color:#5A3E1B;font-weight:800;line-height:1}
+.stat-lbl{font-size:10px;color:#A08060;font-weight:600;margin-top:2px}
+.reward-msg{text-align:center;font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px;margin-top:8px}
+.reward-win{background:#E6F9EE;color:#2A7D55}
+.reward-mid{background:#FFF8E0;color:#9A6A00}
+.reward-low{background:#FFEDED;color:#C03030}
+input[type=text]{font-family:var(--font-main)}
+/* Historial */
+.hist-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}
+.hist-nav button{background:var(--card);border:1.5px solid #EDD9B0;border-radius:10px;padding:6px 18px;font-family:var(--font-main);font-weight:700;font-size:15px;color:#5A3E1B;cursor:pointer}
+.hist-nav button:hover{background:#FFF3DC}
+.hist-nav button:disabled{opacity:0.35;cursor:default}
+.hist-month-title{font-family:var(--font-title);font-size:20px;color:#5A3E1B;font-weight:800;text-transform:capitalize;min-width:180px;text-align:center}
+.hist-prize{background:var(--card);border:2px solid var(--gold2);border-radius:14px;padding:10px 16px;margin-bottom:14px;text-align:center}
+.hist-prize-lbl{font-size:12px;color:#A08060;font-weight:700;margin-bottom:2px}
+.hist-prize-val{font-family:var(--font-title);font-size:18px;color:#5A3E1B}
+.hist-summary{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.hist-stat{background:var(--card);border:1.5px solid #EDD9B0;border-radius:14px;padding:10px 16px;text-align:center;min-width:90px}
+.hist-stat-num{font-family:var(--font-title);font-size:22px;color:#5A3E1B;font-weight:800}
+.hist-stat-lbl{font-size:10px;color:#A08060;font-weight:600;margin-top:2px}
+.hist-progress{margin-bottom:16px}
+.hist-progress-wrap{background:#EDE0CC;border-radius:20px;height:24px;overflow:hidden;position:relative;margin-bottom:6px}
+.hist-progress-bar{height:100%;border-radius:20px;transition:width 0.6s}
+.hist-progress-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.3);pointer-events:none}
+.hist-result{text-align:center;font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px}
+.hist-calendar{background:var(--card);border:1.5px solid #EDD9B0;border-radius:16px;overflow:hidden;margin-bottom:14px}
+.hist-cal-header{display:grid;grid-template-columns:repeat(7,1fr);background:#FFF3DC;border-bottom:1px solid #EDD9B0}
+.hist-cal-header div{text-align:center;padding:7px 2px;font-size:11px;font-weight:700;color:#A08060;text-transform:uppercase}
+.hist-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:10px}
+.hist-day{border-radius:10px;padding:5px 3px;text-align:center;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.hist-day-num{font-size:12px;font-weight:700;line-height:1}
+.hist-day-stars{font-size:10px;font-weight:600}
+.hist-tasks-section{background:var(--card);border:1.5px solid #EDD9B0;border-radius:16px;overflow:hidden;margin-bottom:14px}
+.hist-tasks-header{padding:10px 14px;background:#FFF3DC;border-bottom:1px solid #EDD9B0;font-family:var(--font-title);font-size:15px;color:#5A3E1B}
+.hist-task-row{display:flex;align-items:center;padding:8px 14px;border-bottom:0.5px solid #F0E6D0;gap:8px}
+.hist-task-row:last-child{border-bottom:none}
+.hist-task-name{font-size:12px;color:#5A3E1B;font-weight:600;min-width:0;flex:2}
+.hist-task-bar-wrap{flex:3;background:#EDE0CC;border-radius:10px;height:10px;overflow:hidden}
+.hist-task-bar{height:100%;border-radius:10px}
+.hist-task-pct{font-size:12px;font-weight:700;color:#5A3E1B;min-width:34px;text-align:right}
+</style>
+</head>
+<body>
+
+<h1>🌟 Mi Árbol Mágico 🌟</h1>
+<p class="subtitle">¡Gana estrellas cada día y consigue tu regalo!</p>
+
+<div id="sync-bar" class="sync-bar sync-off">⏳ Conectando con Firebase...</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-tracker" onclick="switchTab('tracker')">🌳 Este mes</button>
+  <button class="tab" id="tab-historial" onclick="switchTab('historial')">📅 Historial</button>
+</div>
+
+<!-- TRACKER -->
+<div id="view-tracker" class="view active">
+  <div class="top-row">
+    <span class="month-label" id="month-label">Cargando...</span>
+    <span class="score-badge">⭐ <span id="total-score">0</span> / <span id="max-score">0</span> pts</span>
+  </div>
+  <div class="gift-zone">
+    <div class="gift-title">🎁 Premio del mes</div>
+    <input id="gift-input" type="text" placeholder="¿Qué quieres ganar este mes? Escribe aquí..." style="width:100%;padding:8px 14px;border:1.5px solid #EDD9B0;border-radius:10px;font-size:13px;color:#5A3E1B;background:#FFFAEF;margin-bottom:10px">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+      <div class="progress-txt" id="progress-txt">0%</div>
+    </div>
+    <div id="reward-msg" class="reward-msg reward-mid">¡Empieza a sumar estrellas!</div>
+  </div>
+  <div class="tree-wrap">
+    <svg id="tree-svg" width="200" height="220" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="nav-row" id="week-nav"></div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="week-score">0</div><div class="stat-lbl">Esta semana</div></div>
+    <div class="stat-card"><div class="stat-num" id="today-score">0</div><div class="stat-lbl">Hoy</div></div>
+    <div class="stat-card"><div class="stat-num" id="streak">0</div><div class="stat-lbl">Racha días</div></div>
+  </div>
+  <div class="tasks-section">
+    <div class="tasks-header">
+      <div>Tarea</div>
+      <div class="day-header" id="dh0"></div><div class="day-header" id="dh1"></div>
+      <div class="day-header" id="dh2"></div><div class="day-header" id="dh3"></div>
+      <div class="day-header" id="dh4"></div><div class="day-header" id="dh5"></div>
+      <div class="day-header" id="dh6"></div>
+    </div>
+    <div id="tasks-body"></div>
+  </div>
+</div>
+
+<!-- HISTORIAL -->
+<div id="view-historial" class="view">
+  <div class="hist-nav">
+    <button id="hist-prev">◀</button>
+    <div class="hist-month-title" id="hist-title"></div>
+    <button id="hist-next">▶</button>
+  </div>
+  <div class="hist-prize" id="hist-prize-zone" style="display:none">
+    <div class="hist-prize-lbl">🎁 Premio de ese mes</div>
+    <div class="hist-prize-val" id="hist-prize-val"></div>
+  </div>
+  <div class="hist-summary" id="hist-summary"></div>
+  <div class="hist-progress">
+    <div class="hist-progress-wrap">
+      <div class="hist-progress-bar" id="hist-prog-bar" style="width:0%"></div>
+      <div class="hist-progress-txt" id="hist-prog-txt">0%</div>
+    </div>
+    <div class="hist-result" id="hist-result"></div>
+  </div>
+  <div class="hist-calendar">
+    <div class="hist-cal-header">
+      <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+    </div>
+    <div class="hist-cal-grid" id="hist-cal-grid"></div>
+  </div>
+  <div class="hist-tasks-section">
+    <div class="hist-tasks-header">📊 Cumplimiento por tarea</div>
+    <div id="hist-tasks-body"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBfRx8s8YInuRX4oxt1XBTXwomGU9bgF-o",
+  authDomain: "arbolmagico-d25d4.firebaseapp.com",
+  databaseURL: "https://arbolmagico-d25d4-default-rtdb.firebaseio.com",
+  projectId: "arbolmagico-d25d4",
+  storageBucket: "arbolmagico-d25d4.firebasestorage.app",
+  messagingSenderId: "724390651536",
+  appId: "1:724390651536:web:23607524571fed96d35a15",
+  measurementId: "G-4KKPB1BFHG"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const TASKS=[
+  {id:'t1',e:'🚿',name:'Se bañó sin llorar'},
+  {id:'t2',e:'🌅',name:'Se levantó para la escuela sin llorar'},
+  {id:'t3',e:'🍽️',name:'Comió sus alimentos sin llorar'},
+  {id:'t4',e:'💬',name:'No le gritó a mamá'},
+  {id:'t5',e:'🤐',name:'No le respondió mal a mamá'},
+  {id:'t6',e:'🎒',name:'Sacó su portacomida del bolso'},
+  {id:'t7',e:'😊',name:'No renegó de la comida'},
+  {id:'t8',e:'👕',name:'Llevó la ropa sucia al cesto'},
+  {id:'t9',e:'🛁',name:'Sacó la ropa sucia del baño'},
+  {id:'t10',e:'🛏️',name:'Tendió su cama'},
+  {id:'t11',e:'📚',name:'Hizo las tareas del colegio'},
+  {id:'t12',e:'🦷',name:'Se lavó los dientes sin que le dijeran'},
+  {id:'t13',e:'🌙',name:'Se fue a dormir a la hora'},
+  {id:'t14',e:'🙏',name:'Pidió las cosas con amabilidad'},
+];
+
+const DAYS_ES=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MONTHS_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+let data={}, prizes={}, currentWeek=0, histOffset=0;
+
+onValue(ref(db,'comportamiento'),(snap)=>{
+  data=snap.val()||{};
+  setSyncOk(); render(); renderHistorial();
+},(e)=>setSyncErr());
+
+onValue(ref(db,'premios'),(snap)=>{
+  prizes=snap.val()||{};
+  const now=new Date();
+  const key=monthKey(now);
+  if(prizes[key]) document.getElementById('gift-input').value=prizes[key];
+  renderHistorial();
+});
+
+function setSyncOk(){const b=document.getElementById('sync-bar');b.className='sync-bar sync-ok';b.textContent='✅ Sincronizado con Firebase — cambios en tiempo real';}
+function setSyncErr(){const b=document.getElementById('sync-bar');b.className='sync-bar sync-err';b.textContent='❌ Sin conexión — verifica internet o reglas de Firebase';}
+
+async function toggle(taskId,dateStr){
+  const cur=data[dateStr]?.[taskId]||false;
+  await set(ref(db,`comportamiento/${dateStr}/${taskId}`),!cur);
+}
+
+document.getElementById('gift-input').addEventListener('input',async(e)=>{
+  const mk=monthKey(new Date());
+  await set(ref(db,`premios/${mk}`),e.target.value);
+});
+
+document.getElementById('hist-prev').onclick=()=>{histOffset--;renderHistorial();};
+document.getElementById('hist-next').onclick=()=>{histOffset++;renderHistorial();};
+
+window.switchTab=function(tab){
+  ['tracker','historial'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('view-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='historial') renderHistorial();
+};
+
+function dateKey(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function monthKey(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
+
+function monthScoreFor(y,m){
+  let s=0,max=0;
+  const days=daysInMonth(y,m);
+  for(let i=1;i<=days;i++){
+    max+=TASKS.length;
+    const dk=dateKey(new Date(y,m,i));
+    if(data[dk])Object.values(data[dk]).forEach(v=>{if(v)s++;});
+  }
+  return{s,max,days};
+}
+
+function renderHistorial(){
+  const now=new Date();
+  const hd=new Date(now.getFullYear(),now.getMonth()+histOffset,1);
+  const y=hd.getFullYear(),m=hd.getMonth();
+  const isCurrentOrFuture=(y>now.getFullYear()||(y===now.getFullYear()&&m>=now.getMonth()));
+  document.getElementById('hist-next').disabled=isCurrentOrFuture;
+  document.getElementById('hist-title').textContent=`${MONTHS_ES[m]} ${y}`;
+
+  const {s,max,days}=monthScoreFor(y,m);
+  const pct=max>0?s/max:0, pctR=Math.round(pct*100);
+  const mk=monthKey(hd);
+  const prize=prizes[mk]||'';
+
+  const pz=document.getElementById('hist-prize-zone');
+  if(prize){pz.style.display='block';document.getElementById('hist-prize-val').textContent=prize;}
+  else pz.style.display='none';
+
+  let bestDay=0,bestDayNum=0,activeDays=0;
+  for(let i=1;i<=days;i++){
+    const ds=data[dateKey(new Date(y,m,i))]?Object.values(data[dateKey(new Date(y,m,i))]).filter(v=>v).length:0;
+    if(ds>0)activeDays++;
+    if(ds>bestDay){bestDay=ds;bestDayNum=i;}
+  }
+
+  document.getElementById('hist-summary').innerHTML=`
+    <div class="hist-stat"><div class="hist-stat-num">${s}</div><div class="hist-stat-lbl">Estrellas ganadas</div></div>
+    <div class="hist-stat"><div class="hist-stat-num">${max}</div><div class="hist-stat-lbl">Posibles</div></div>
+    <div class="hist-stat"><div class="hist-stat-num">${activeDays}</div><div class="hist-stat-lbl">Días activos</div></div>
+    <div class="hist-stat"><div class="hist-stat-num">${bestDay}${bestDayNum?'<span style="display:block;font-size:10px;color:#A08060;font-weight:600">día '+bestDayNum+'</span>':''}</div><div class="hist-stat-lbl">Mejor día</div></div>
+  `;
+
+  const barColor=pct>=1?'#3BB87F':pct>=0.7?'#7EC87A':pct>=0.4?'#F5A623':'#E05555';
+  document.getElementById('hist-prog-bar').style.cssText=`width:${pctR}%;background:${barColor}`;
+  document.getElementById('hist-prog-txt').textContent=pctR+'%';
+  const res=document.getElementById('hist-result');
+  if(pct>=1){res.className='hist-result reward-win';res.textContent='🏆 ¡Premio ganado ese mes!';}
+  else if(pct>=0.7){res.className='hist-result reward-win';res.textContent='🌟 ¡Excelente mes!';}
+  else if(pct>=0.4){res.className='hist-result reward-mid';res.textContent='💪 Buen mes — ¡puede mejorar!';}
+  else{res.className='hist-result reward-low';res.textContent=s===0?'😴 Sin datos registrados':'😕 Mes difícil — ¡el próximo será mejor!';}
+
+  // Calendario
+  const firstDow=new Date(y,m,1).getDay();
+  const offset=firstDow===0?6:firstDow-1;
+  const grid=document.getElementById('hist-cal-grid');
+  grid.innerHTML='';
+  for(let i=0;i<offset;i++){const e=document.createElement('div');e.className='hist-day';grid.appendChild(e);}
+  for(let i=1;i<=days;i++){
+    const isFuture=new Date(y,m,i)>now;
+    const ds=!isFuture&&data[dateKey(new Date(y,m,i))]?Object.values(data[dateKey(new Date(y,m,i))]).filter(v=>v).length:0;
+    const tp=Math.round((ds/TASKS.length)*100);
+    const bg=isFuture?'#F5F0E8':ds===0?'#F5F0E8':tp>=80?'#C8F0DC':tp>=50?'#FFF4CC':'#FFE0DC';
+    const tc=isFuture?'#C0B090':ds===0?'#C0B090':tp>=80?'#1A6B45':tp>=50?'#8A6000':'#9A2020';
+    const e=document.createElement('div');
+    e.className='hist-day';e.style.background=bg;
+    e.innerHTML=`<span class="hist-day-num" style="color:${tc}">${i}</span>${ds>0?`<span class="hist-day-stars" style="color:${tc}">⭐${ds}</span>`:''}`;
+    grid.appendChild(e);
+  }
+
+  // Barras por tarea
+  const tbody=document.getElementById('hist-tasks-body');tbody.innerHTML='';
+  TASKS.forEach(task=>{
+    let count=0;
+    for(let i=1;i<=days;i++){
+      const d=new Date(y,m,i);
+      if(d<=now&&data[dateKey(d)]&&data[dateKey(d)][task.id])count++;
+    }
+    const activeDaysCount=Math.min(days,Math.ceil((Math.min(now,new Date(y,m+1,0))-new Date(y,m,1))/(1000*60*60*24))+1);
+    const tp=activeDaysCount>0?Math.round((count/activeDaysCount)*100):0;
+    const bc=tp>=80?'#3BB87F':tp>=50?'#F5A623':'#E05555';
+    const row=document.createElement('div');row.className='hist-task-row';
+    row.innerHTML=`<span class="hist-task-name">${task.e} ${task.name}</span><div class="hist-task-bar-wrap"><div class="hist-task-bar" style="width:${tp}%;background:${bc}"></div></div><span class="hist-task-pct">${tp}%</span>`;
+    tbody.appendChild(row);
+  });
+}
+
+// TRACKER
+function getWeekStart(offset=0){
+  const now=new Date(),day=now.getDay();
+  const m=new Date(now);m.setDate(now.getDate()-day+1+(offset*7));m.setHours(0,0,0,0);return m;
+}
+function getWeekDates(offset=0){
+  const s=getWeekStart(offset);
+  return Array.from({length:7},(_,i)=>{const d=new Date(s);d.setDate(s.getDate()+i);return d;});
+}
+function weekScore(dates){let s=0;dates.forEach(d=>{const dk=dateKey(d);if(data[dk])Object.values(data[dk]).forEach(v=>{if(v)s++;});});return s;}
+function todayScore(){const dk=dateKey(new Date());if(!data[dk])return 0;return Object.values(data[dk]).filter(v=>v).length;}
+function calcStreak(){
+  let streak=0;const now=new Date();
+  for(let i=0;i<60;i++){
+    const d=new Date(now);d.setDate(now.getDate()-i);
+    const s=data[dateKey(d)]?Object.values(data[dateKey(d)]).filter(v=>v).length:0;
+    if(s>=Math.floor(TASKS.length*0.5))streak++;else break;
+  }return streak;
+}
+
+function drawTree(pct){
+  const svg=document.getElementById('tree-svg');svg.innerHTML='';
+  const cx=100;
+  const layers=[{y:132,rx:58,ry:36},{y:98,rx:45,ry:30},{y:70,rx:32,ry:22}];
+  const gc=pct>0.6?'#3BB87F':pct>0.3?'#7EC87A':'#B5D9A8';
+  let ls='';layers.forEach((l,i)=>{ls+=`<ellipse cx="${cx}" cy="${l.y}" rx="${l.rx}" ry="${l.ry}" fill="${gc}" opacity="${pct>i*0.25?1:0.18}"/>`;});
+  const pos=[[78,110],[122,110],[88,90],[112,90],[100,100],[72,126],[128,126],[92,120],[108,120],[80,136],[120,136],[100,140],[88,130],[112,130]];
+  let fr='';pos.slice(0,Math.round(pct*14)).forEach(([fx,fy])=>{fr+=`<circle cx="${fx}" cy="${fy}" r="7" fill="#FFD166" stroke="#F5A623" stroke-width="1.2"/><circle cx="${fx+2}" cy="${fy-2}" r="2" fill="#fff" opacity="0.5"/>`;});
+  if(pct>=1)fr+=`<text x="${cx}" y="55" text-anchor="middle" font-size="26" font-family="sans-serif">🎁</text>`;
+  const st=pct>0.7?`<text x="28" y="42" font-size="16" opacity="0.8">✨</text><text x="162" y="36" font-size="13" opacity="0.7">⭐</text>`:pct>0.4?`<text x="158" y="52" font-size="13" opacity="0.5">✨</text>`:'';
+  svg.innerHTML=st+`<ellipse cx="${cx}" cy="210" rx="55" ry="10" fill="#7EC87A" opacity="0.45"/><rect x="${cx-9}" y="162" width="18" height="48" rx="6" fill="#A0632A"/>`+ls+fr;
+}
+
+function render(){
+  const dates=getWeekDates(currentWeek);
+  const now=new Date();
+  const {s:ms,max:mm}=monthScoreFor(now.getFullYear(),now.getMonth());
+  const pct=mm>0?ms/mm:0,pctR=Math.round(pct*100);
+  document.getElementById('month-label').textContent=`${MONTHS_ES[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('total-score').textContent=ms;
+  document.getElementById('max-score').textContent=mm;
+  document.getElementById('progress-bar').style.width=pctR+'%';
+  document.getElementById('progress-txt').textContent=pctR+'%';
+  document.getElementById('week-score').textContent=weekScore(dates);
+  document.getElementById('today-score').textContent=todayScore();
+  document.getElementById('streak').textContent=calcStreak();
+  const rm=document.getElementById('reward-msg');
+  if(pct>=1){rm.className='reward-msg reward-win';rm.textContent='🏆 ¡PREMIO GANADO! ¡Eres increíble!';}
+  else if(pct>=0.7){rm.className='reward-msg reward-win';rm.textContent='🌟 ¡Muy bien! ¡Vas a ganar el premio!';}
+  else if(pct>=0.4){rm.className='reward-msg reward-mid';rm.textContent='💪 ¡Buen trabajo! ¡Sigue así!';}
+  else{rm.className='reward-msg reward-low';rm.textContent='😊 ¡Ánimo! ¡Cada estrella cuenta!';}
+  drawTree(pct);
+  const start=getWeekStart(currentWeek),end=new Date(start);end.setDate(start.getDate()+6);
+  const fmtD=(d)=>`${d.getDate()} ${MONTHS_ES[d.getMonth()].slice(0,3)}`;
+  document.getElementById('week-nav').innerHTML=`
+    <button class="nav-btn" id="btn-prev">◀ Anterior</button>
+    <button class="nav-btn active">${fmtD(start)} – ${fmtD(end)}</button>
+    <button class="nav-btn" id="btn-next">Siguiente ▶</button>
+  `;
+  document.getElementById('btn-prev').onclick=()=>{currentWeek--;render();};
+  document.getElementById('btn-next').onclick=()=>{currentWeek++;render();};
+  dates.forEach((d,i)=>{
+    const el=document.getElementById('dh'+i);
+    const isToday=dateKey(d)===dateKey(now);
+    el.innerHTML=`<span style="display:block;font-size:9px;color:${isToday?'#3BB87F':'#A08060'};font-weight:${isToday?'800':'600'}">${DAYS_ES[d.getDay()]}</span><span style="display:block;font-size:12px;color:${isToday?'#3BB87F':'#5A3E1B'};font-weight:${isToday?'800':'700'}">${d.getDate()}</span>`;
+  });
+  const body=document.getElementById('tasks-body');body.innerHTML='';
+  TASKS.forEach(task=>{
+    const row=document.createElement('div');row.className='task-row';
+    let cells=`<div class="task-name"><span class="task-emoji">${task.e}</span>${task.name}</div>`;
+    dates.forEach(d=>{
+      const dk=dateKey(d);
+      const on=data[dk]&&data[dk][task.id];
+      const isFuture=d>now&&dateKey(d)!==dateKey(now);
+      cells+=`<div><button class="star-btn${on?' on':''}" data-task="${task.id}" data-date="${dk}"${isFuture?' style="opacity:0.3;pointer-events:none"':''}>
+        <svg width="22" height="22" viewBox="0 0 20 20"><polygon points="10,2 12.5,7.5 18.5,8 14,12.5 15.5,18.5 10,15.5 4.5,18.5 6,12.5 1.5,8 7.5,7.5" fill="${on?'#FFD166':'#E8E0D4'}" stroke="${on?'#F5A623':'#CCC0B0'}" stroke-width="1"/></svg>
+      </button></div>`;
+    });
+    row.innerHTML=cells;body.appendChild(row);
+  });
+  document.querySelectorAll('.star-btn[data-task]').forEach(btn=>{
+    btn.addEventListener('click',()=>toggle(btn.dataset.task,btn.dataset.date));
+  });
+}
+
+render();
+</script>
+</body>
+</html>
