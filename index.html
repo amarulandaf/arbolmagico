@@ -116,6 +116,15 @@ input[type=text]{font-family:var(--font-main)}
 .reset-desc{font-size:11px;color:#9A2020;margin-bottom:10px;display:block;font-weight:600}
 .reset-btn{padding:8px 18px;background:#E05555;border:2px solid #9A2020;border-radius:8px;font-weight:700;color:#fff;cursor:pointer;font-size:12px;transition:background 0.2s;font-family:var(--font-title)}
 .reset-btn:hover{background:#9A2020}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border-radius:20px;padding:20px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #EDD9B0}
+.modal-title{font-family:var(--font-title);font-size:18px;color:#5A3E1B;font-weight:800}
+.modal-close{background:none;border:none;font-size:24px;color:#A08060;cursor:pointer;padding:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{color:#5A3E1B}
+.manage-btn{padding:10px 20px;background:var(--green2);border:2px solid var(--green);border-radius:10px;font-weight:700;color:#5A3E1B;cursor:pointer;font-size:13px;transition:background 0.2s;font-family:var(--font-title);margin-bottom:14px}
+.manage-btn:hover{background:var(--green)}
 </style>
 </head>
 <body>
@@ -123,9 +132,9 @@ input[type=text]{font-family:var(--font-main)}
 <h1>🌟 Mi Árbol Mágico 🌟</h1>
 <p class="subtitle">¡Gana estrellas cada día y consigue tu regalo!</p>
 
-<div id="child-name-section" class="child-name-section" style="display:none">
+<div id="child-name-section" class="child-name-section">
   <span class="child-name-label">👶 Nombre del niño:</span>
-  <div class="child-name-display" id="child-name-display"></div>
+  <div class="child-name-display" id="child-name-display">¿Cuál es tu nombre?</div>
   <div class="child-name-input-wrap">
     <input id="child-name-input" type="text" class="child-name-input" placeholder="Escribe el nombre del niño...">
     <button id="child-name-save-btn" class="child-name-save-btn" onclick="saveChildName()">💾 Guardar</button>
@@ -167,15 +176,7 @@ input[type=text]{font-family:var(--font-main)}
     <div class="stat-card"><div class="stat-num">✅ <span id="good-points">0</span></div><div class="stat-lbl">Pts. buenos</div></div>
     <div class="stat-card"><div class="stat-num">❌ <span id="bad-points">0</span></div><div class="stat-lbl">Pts. malos</div></div>
   </div>
-  <div class="manage-section">
-    <div class="manage-title">⚙️ Gestionar tareas</div>
-    <div class="add-task-form">
-      <input id="task-emoji" type="text" placeholder="😊" maxlength="2" style="max-width:50px">
-      <input id="task-name" type="text" placeholder="Nombre de la tarea..." >
-      <button onclick="addTask()" style="padding:10px 16px;background:var(--green2);border:2px solid var(--green);border-radius:8px;font-weight:700;color:#5A3E1B;cursor:pointer;font-size:13px;transition:background 0.2s">💾 Añadir tarea</button>
-    </div>
-    <div class="tasks-list" id="tasks-list"></div>
-  </div>
+  <button class="manage-btn" onclick="openTasksModal()">⚙️ Gestionar tareas</button>
   <div class="tasks-section">
     <div class="tasks-header">
       <div>Tarea</div>
@@ -190,6 +191,22 @@ input[type=text]{font-family:var(--font-main)}
     <span class="reset-title">⚠️ Zona de administración</span>
     <span class="reset-desc">Elimina todo y comienza de nuevo</span>
     <button onclick="resetSystem()" class="reset-btn">🔄 Reiniciar Sistema</button>
+  </div>
+</div>
+
+<!-- MODAL DE GESTIÓN DE TAREAS -->
+<div id="tasks-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">⚙️ Gestionar tareas</span>
+      <button class="modal-close" onclick="closeTasksModal()">✕</button>
+    </div>
+    <div class="add-task-form">
+      <input id="task-emoji" type="text" placeholder="😊" maxlength="2" style="max-width:50px">
+      <input id="task-name" type="text" placeholder="Nombre de la tarea..." >
+      <button onclick="addTask()" style="padding:10px 16px;background:var(--green2);border:2px solid var(--green);border-radius:8px;font-weight:700;color:#5A3E1B;cursor:pointer;font-size:13px;transition:background 0.2s">💾 Añadir tarea</button>
+    </div>
+    <div class="tasks-list" id="tasks-list"></div>
   </div>
 </div>
 
@@ -348,6 +365,24 @@ async function saveChildName(){
     btn.style.background='var(--gold2)';
   },1500);
 }
+
+function openTasksModal(){
+  document.getElementById('tasks-modal').classList.add('active');
+}
+
+function closeTasksModal(){
+  document.getElementById('tasks-modal').classList.remove('active');
+}
+
+// Cerrar modal al hacer clic en el overlay
+setTimeout(()=>{
+  const tasksModal=document.getElementById('tasks-modal');
+  if(tasksModal){
+    tasksModal.addEventListener('click',(e)=>{
+      if(e.target.id==='tasks-modal') closeTasksModal();
+    });
+  }
+},100);
 
 document.getElementById('hist-prev').onclick=()=>{histOffset--;renderHistorial();};
 document.getElementById('hist-next').onclick=()=>{histOffset++;renderHistorial();};
